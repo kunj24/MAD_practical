@@ -15,6 +15,7 @@ class GameItem {
 
 class MatchingGame extends StatefulWidget {
   const MatchingGame({super.key});
+
   @override
   State<MatchingGame> createState() => _MatchingGameState();
 }
@@ -42,8 +43,8 @@ class _MatchingGameState extends State<MatchingGame> {
   }
 
   void _shuffle() {
-    leftList = List.from(_items)..shuffle();
-    rightList = List.from(_items)..shuffle();
+    leftList = List.from(_items)..shuffle(Random());
+    rightList = List.from(_items)..shuffle(Random());
     for (var i in _items) i.matched = false;
     leftSelected = rightSelected = null;
     score = 0;
@@ -51,6 +52,7 @@ class _MatchingGameState extends State<MatchingGame> {
   }
 
   void _select(GameItem item, bool left) {
+    if (item.matched) return;
     setState(() => left ? leftSelected = item : rightSelected = item);
     if (leftSelected != null && rightSelected != null) {
       _checkMatch();
@@ -65,6 +67,7 @@ class _MatchingGameState extends State<MatchingGame> {
         score += 10;
       });
     }
+
     Future.delayed(const Duration(milliseconds: 800), () {
       setState(() {
         leftSelected = null;
@@ -84,11 +87,13 @@ class _MatchingGameState extends State<MatchingGame> {
             style: const TextStyle(color: Colors.white70)),
         actions: [
           TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                _shuffle();
-              },
-              child: const Text('Play Again'))
+            onPressed: () {
+              Navigator.pop(context);
+              _shuffle();
+            },
+            child: const Text('Play Again',
+                style: TextStyle(color: Colors.lightBlueAccent)),
+          ),
         ],
       ),
     );
@@ -109,12 +114,13 @@ class _MatchingGameState extends State<MatchingGame> {
                   : const Color(0xFF313244),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-              color: item.matched
-                  ? Colors.greenAccent
-                  : selected
-                      ? Colors.blueAccent
-                      : Colors.grey,
-              width: 2),
+            color: item.matched
+                ? Colors.greenAccent
+                : selected
+                    ? Colors.blueAccent
+                    : Colors.grey,
+            width: 2,
+          ),
         ),
         child: Center(
           child: Text(
@@ -142,21 +148,25 @@ class _MatchingGameState extends State<MatchingGame> {
           const SizedBox(height: 10),
           Text('Score: $score',
               style: const TextStyle(color: Colors.white, fontSize: 18)),
+          const SizedBox(height: 10),
           Expanded(
             child: Row(
               children: [
                 Expanded(
-                    child: ListView(
-                        children: leftList
-                            .map((e) => _buildCard(e, true, leftSelected == e))
-                            .toList())),
+                  child: ListView.builder(
+                    itemCount: leftList.length,
+                    itemBuilder: (context, index) => _buildCard(
+                        leftList[index], true, leftSelected == leftList[index]),
+                  ),
+                ),
                 Container(width: 2, color: Colors.white12),
                 Expanded(
-                    child: ListView(
-                        children: rightList
-                            .map(
-                                (e) => _buildCard(e, false, rightSelected == e))
-                            .toList())),
+                  child: ListView.builder(
+                    itemCount: rightList.length,
+                    itemBuilder: (context, index) => _buildCard(
+                        rightList[index], false, rightSelected == rightList[index]),
+                  ),
+                ),
               ],
             ),
           ),
@@ -165,11 +175,12 @@ class _MatchingGameState extends State<MatchingGame> {
             icon: const Icon(Icons.refresh),
             label: const Text('New Game'),
             style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF89B4FA),
-                foregroundColor: const Color(0xFF1e1e2e)),
+              backgroundColor: const Color(0xFF89B4FA),
+              foregroundColor: const Color(0xFF1e1e2e),
+            ),
           ),
           const SizedBox(height: 8),
-          const Text('Made by Prince Lad (23CS037)',
+          const Text('Made by Kunj Mungalpara (23CS047)',
               style: TextStyle(color: Colors.grey, fontSize: 12)),
           const SizedBox(height: 12),
         ],

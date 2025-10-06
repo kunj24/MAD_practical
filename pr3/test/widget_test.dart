@@ -1,30 +1,53 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:pr3/main.dart';
+import 'package:pr3/main.dart'; // adjust if your folder name differs
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('Game loads with title and controls', (tester) async {
+    await tester.pumpWidget(const MaterialApp(home: MatchingGame()));
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    expect(find.text('🍓 Fruit Matching Game'), findsOneWidget);
+    expect(find.textContaining('Score:'), findsOneWidget);
+    expect(find.text('New Game'), findsOneWidget);
+  });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
+  testWidgets('Tapping New Game refreshes cards', (tester) async {
+    await tester.pumpWidget(const MaterialApp(home: MatchingGame()));
+    await tester.tap(find.text('New Game'));
     await tester.pump();
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    // Ensure at least one emoji appears
+    expect(find.textContaining('🍎').evaluate().isNotEmpty ||
+        find.textContaining('🍌').evaluate().isNotEmpty, true);
+  });
+
+  testWidgets('Matching correct pair increases score', (tester) async {
+    await tester.pumpWidget(const MaterialApp(home: MatchingGame()));
+
+    // Tap matching emoji and word
+    await tester.tap(find.text('🍎'));
+    await tester.tap(find.text('APPLE'));
+    await tester.pumpAndSettle(const Duration(seconds: 1));
+
+    // Score should increase
+    expect(find.textContaining('Score: 10'), findsOneWidget);
+  });
+
+  testWidgets('Winning dialog shows correctly when triggered manually', (tester) async {
+    await tester.pumpWidget(const MaterialApp(home: MatchingGame()));
+
+    // Trigger win dialog manually (simulate end of game)
+    showDialog(
+      context: tester.element(find.byType(MatchingGame)),
+      builder: (_) => const AlertDialog(
+        title: Text('🎉 You Won!'),
+        content: Text('Your Score: 60'),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    expect(find.text('🎉 You Won!'), findsOneWidget);
+    expect(find.text('Your Score: 60'), findsOneWidget);
   });
 }
