@@ -11,20 +11,32 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:pr2/main.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('Calculator: 1 + 1 = 2', (WidgetTester tester) async {
+    // Build the calculator app
+    await tester.pumpWidget(const CalculatorApp());
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    // Verify initial display is 0 (by key)
+    expect(find.byKey(const Key('display')), findsOneWidget);
+    expect(find.text('0'), findsWidgets);
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    // Press 1 using key
+    await tester.tap(find.byKey(const Key('1')));
+    await tester.pumpAndSettle();
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    // Press + using key
+    await tester.tap(find.byKey(const Key('+')));
+    await tester.pumpAndSettle();
+
+    // Press 1 using key
+    await tester.tap(find.byKey(const Key('1')));
+    await tester.pumpAndSettle();
+
+    // Press = using key
+    await tester.tap(find.byKey(const Key('=')));
+    await tester.pumpAndSettle();
+
+    // Expect 2 on display (read the display Text widget by key)
+    final Text displayText = tester.widget(find.byKey(const Key('display')));
+    expect(displayText.data, '2');
   });
 }
