@@ -17,13 +17,20 @@ class SectionCard extends StatelessWidget {
     return Card(
       color: const Color(0xFF0F0F0F),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      elevation: 2,
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Column(
           children: [
             Row(
               children: [
-                Text(title, style: Theme.of(context).textTheme.titleLarge),
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
                 const Spacer(),
                 if (action != null) action!,
               ],

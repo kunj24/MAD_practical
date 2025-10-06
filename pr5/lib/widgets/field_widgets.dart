@@ -6,25 +6,50 @@ Widget buildTextField(
   IconData? icon,
   TextInputType keyboard = TextInputType.text,
 }) {
-  return TextField(
-    controller: controller,
-    keyboardType: keyboard,
-    style: const TextStyle(color: Colors.white),
-    decoration: InputDecoration(
-      hintText: placeholder,
-      prefixIcon: icon == null ? null : Icon(icon, color: Colors.amber[300]),
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 6),
+    child: TextField(
+      controller: controller,
+      keyboardType: keyboard,
+      style: const TextStyle(color: Colors.white),
+      decoration: InputDecoration(
+        hintText: placeholder,
+        prefixIcon: icon == null
+            ? null
+            : Icon(icon, color: const Color(0xFF1976D2)),
+        filled: true,
+        fillColor: const Color(0xFF0B0B0B),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide.none,
+        ),
+      ),
     ),
   );
 }
 
-Widget buildMultilineField(TextEditingController controller, String placeholder) {
-  return TextField(
-    controller: controller,
-    keyboardType: TextInputType.multiline,
-    minLines: 3,
-    maxLines: 6,
-    style: const TextStyle(color: Colors.white),
-    decoration: InputDecoration(hintText: placeholder),
+Widget buildMultilineField(
+  TextEditingController controller,
+  String placeholder,
+) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 6),
+    child: TextField(
+      controller: controller,
+      keyboardType: TextInputType.multiline,
+      minLines: 3,
+      maxLines: 6,
+      style: const TextStyle(color: Colors.white),
+      decoration: InputDecoration(
+        hintText: placeholder,
+        filled: true,
+        fillColor: const Color(0xFF0B0B0B),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide.none,
+        ),
+      ),
+    ),
   );
 }
 
@@ -40,9 +65,20 @@ Widget smallTextField({
     }
   });
 
-  return TextField(
-    controller: controller,
-    style: const TextStyle(color: Colors.white),
-    decoration: InputDecoration(hintText: placeholder),
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 6),
+    child: TextField(
+      controller: controller,
+      style: const TextStyle(color: Colors.white, fontSize: 14),
+      decoration: InputDecoration(
+        hintText: placeholder,
+        filled: true,
+        fillColor: const Color(0xFF0B0B0B),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide.none,
+        ),
+      ),
+    ),
   );
 }
