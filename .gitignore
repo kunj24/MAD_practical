@@ -1,0 +1,38 @@
+# Flutter/Dart
+.dart_tool/
+.dart_tool/**
+build/
+.packages
+.flutter-plugins
+.flutter-plugins-dependencies
+.metadata
+
+# Android
+/.gradle/
+/android/.gradle/
+
+# iOS
+Pods/
+Runner.xcworkspace/
+
+# VS Code
+.vscode/
+
+# IntelliJ / Android Studio
+.idea/
+*.iml
+
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# Misc
+.flutter-plugins-dependencies
+pubspec.lock
