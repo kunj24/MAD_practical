@@ -5,7 +5,7 @@ import 'package:pr5/main.dart'; // Update this to your project path
 void main() {
   testWidgets('Basic UI smoke test', (WidgetTester tester) async {
     // Build the app
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(const ResumeMakerApp());
 
     // Check if main title is displayed
     expect(find.text('Resume Maker'), findsOneWidget);
@@ -27,7 +27,7 @@ void main() {
   });
 
   testWidgets('Add Education entry', (WidgetTester tester) async {
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(const ResumeMakerApp());
 
     // Tap 'Add' button under Education
     await tester.tap(find.widgetWithText(TextButton, 'Add').first);
@@ -38,7 +38,7 @@ void main() {
   });
 
   testWidgets('Clear form', (WidgetTester tester) async {
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(const ResumeMakerApp());
 
     // Tap Clear button
     await tester.tap(find.widgetWithIcon(OutlinedButton, Icons.delete_outline));
