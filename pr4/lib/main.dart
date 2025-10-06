@@ -1,34 +1,24 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
 
-void main() {
-  runApp(const MyApp());
-}
+void main() => runApp(const MyApp());
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'EMI Calculator',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        scaffoldBackgroundColor: const Color(0xFF1e1e2e),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF2BD4B4),
-          foregroundColor: Color(0xFF1e1e2e),
-          elevation: 0,
+  Widget build(BuildContext context) => MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'EMI Calculator',
+        theme: ThemeData.dark().copyWith(
+          scaffoldBackgroundColor: const Color(0xFF1e1e2e),
+          colorScheme: const ColorScheme.dark(
+            primary: Color(0xFF2BD4B4),
+            secondary: Color(0xFF89B4FA),
+          ),
         ),
-        textTheme: const TextTheme(
-          bodyLarge: TextStyle(color: Color(0xFFcdd6f4)),
-          bodyMedium: TextStyle(color: Color(0xFFcdd6f4)),
-          titleLarge: TextStyle(color: Color(0xFFcdd6f4)),
-        ),
-      ),
-      home: const EMICalculator(),
-    );
-  }
+        home: const EMICalculator(),
+      );
 }
 
 class EMICalculator extends StatefulWidget {
@@ -39,387 +29,165 @@ class EMICalculator extends StatefulWidget {
 }
 
 class _EMICalculatorState extends State<EMICalculator> {
-  final TextEditingController _loanAmountController = TextEditingController();
-  final TextEditingController _interestRateController = TextEditingController();
-  final TextEditingController _tenureController = TextEditingController();
+  final _loanCtrl = TextEditingController(),
+      _rateCtrl = TextEditingController(),
+      _tenureCtrl = TextEditingController();
+  double _emi = 0, _total = 0, _interest = 0;
+  bool _show = false;
 
-  double _emi = 0.0;
-  double _totalPayment = 0.0;
-  double _totalInterest = 0.0;
-  bool _showResults = false;
-
-  void _calculateEMI() {
-    if (_loanAmountController.text.isEmpty ||
-        _interestRateController.text.isEmpty ||
-        _tenureController.text.isEmpty) {
-      _showErrorDialog('Please fill all fields');
+  void _calc() {
+    if (_loanCtrl.text.isEmpty ||
+        _rateCtrl.text.isEmpty ||
+        _tenureCtrl.text.isEmpty) {
+      _alert('Please fill all fields');
       return;
     }
-
     try {
-      double principal = double.parse(_loanAmountController.text);
-      double annualRate = double.parse(_interestRateController.text);
-      int tenureMonths = int.parse(_tenureController.text);
-
-      if (principal <= 0 || annualRate < 0 || tenureMonths <= 0) {
-        _showErrorDialog('Please enter valid positive values');
+      final p = double.parse(_loanCtrl.text),
+          r = double.parse(_rateCtrl.text) / 1200,
+          n = int.parse(_tenureCtrl.text);
+      if (p <= 0 || r < 0 || n <= 0) {
+        _alert('Please enter valid values');
         return;
       }
-
-      // Convert annual rate to monthly rate and percentage to decimal
-      double monthlyRate = (annualRate / 12) / 100;
-
-      // EMI calculation formula: P * r * (1+r)^n / ((1+r)^n - 1)
-      double emi;
-      if (monthlyRate == 0) {
-        // If interest rate is 0, EMI is simply principal divided by tenure
-        emi = principal / tenureMonths;
-      } else {
-        double factor = pow(1 + monthlyRate, tenureMonths).toDouble();
-        emi = (principal * monthlyRate * factor) / (factor - 1);
-      }
-
-      double totalPayment = emi * tenureMonths;
-      double totalInterest = totalPayment - principal;
-
+      final emi = r == 0 ? p / n : p * r * pow(1 + r, n) / (pow(1 + r, n) - 1);
       setState(() {
         _emi = emi;
-        _totalPayment = totalPayment;
-        _totalInterest = totalInterest;
-        _showResults = true;
+        _total = emi * n;
+        _interest = _total - p;
+        _show = true;
       });
-    } catch (e) {
-      _showErrorDialog('Please enter valid numbers');
+    } catch (_) {
+      _alert('Enter valid numbers');
     }
   }
 
-  void _showErrorDialog(String message) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
+  void _alert(String msg) => showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
           backgroundColor: const Color(0xFF313244),
-          title: const Text(
-            'Error',
-            style: TextStyle(color: Color(0xFFf38ba8)),
-          ),
-          content: Text(
-            message,
-            style: const TextStyle(color: Color(0xFFcdd6f4)),
-          ),
+          title: const Text('Error', style: TextStyle(color: Color(0xFFf38ba8))),
+          content: Text(msg, style: const TextStyle(color: Color(0xFFcdd6f4))),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text(
-                'OK',
-                style: TextStyle(color: Color(0xFF89B4FA)),
-              ),
-            ),
+              onPressed: () => Navigator.pop(context),
+              child: const Text('OK', style: TextStyle(color: Color(0xFF89B4FA))),
+            )
           ],
-        );
-      },
-    );
-  }
-
-  void _clearAll() {
-    setState(() {
-      _loanAmountController.clear();
-      _interestRateController.clear();
-      _tenureController.clear();
-      _emi = 0.0;
-      _totalPayment = 0.0;
-      _totalInterest = 0.0;
-      _showResults = false;
-    });
-  }
-
-  Widget _buildInputField({
-    required TextEditingController controller,
-    required String label,
-    required String hint,
-    required IconData icon,
-    String suffix = '',
-  }) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8.0),
-      child: TextFormField(
-        controller: controller,
-        keyboardType: TextInputType.number,
-        style: const TextStyle(color: Color(0xFFcdd6f4), fontSize: 16),
-        decoration: InputDecoration(
-          labelText: label,
-          hintText: hint,
-          suffixText: suffix,
-          prefixIcon: Icon(icon, color: const Color(0xFF89B4FA)),
-          labelStyle: const TextStyle(color: Color(0xFFb4befe)),
-          hintStyle: const TextStyle(color: Color(0xFF6c7086)),
-          suffixStyle: const TextStyle(color: Color(0xFFb4befe)),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color(0xFF45475a), width: 1.5),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color(0xFF89B4FA), width: 2),
-          ),
-          filled: true,
-          fillColor: const Color(0xFF313244),
         ),
-      ),
-    );
-  }
+      );
 
-  Widget _buildResultCard({
-    required String title,
-    required String value,
-    required IconData icon,
-    required Color color,
-  }) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 6),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
+  void _clear() => setState(() {
+        _loanCtrl.clear();
+        _rateCtrl.clear();
+        _tenureCtrl.clear();
+        _show = false;
+      });
+
+  Widget _input(TextEditingController c, String l, String h, IconData i,
+          [String s = '']) =>
+      Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: TextField(
+          controller: c,
+          keyboardType: TextInputType.number,
+          decoration: InputDecoration(
+            labelText: l,
+            hintText: h,
+            prefixIcon: Icon(i, color: const Color(0xFF89B4FA)),
+            suffixText: s,
+            filled: true,
+            fillColor: const Color(0xFF313244),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        ),
+      );
+
+  Widget _result(String t, String v, IconData i, Color c) => Card(
         color: const Color(0xFF313244),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFF45475a), width: 1),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(icon, color: color, size: 24),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: Color(0xFFb4befe),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  value,
-                  style: TextStyle(
-                    color: color,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: const EdgeInsets.symmetric(vertical: 6),
+        child: ListTile(
+          leading: Icon(i, color: c),
+          title: Text(t, style: const TextStyle(color: Color(0xFFb4befe))),
+          subtitle: Text(v,
+              style:
+                  TextStyle(color: c, fontWeight: FontWeight.bold, fontSize: 16)),
+        ),
+      );
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'EMI Calculator',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
-        ),
-        centerTitle: true,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Student Info
-            Container(
-              padding: const EdgeInsets.all(16),
-              margin: const EdgeInsets.only(bottom: 20),
-              decoration: BoxDecoration(
-                color: const Color(0xFF313244),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFF45475a), width: 1),
-              ),
-              child: Column(
-                children: [
-                  Text(
-                    'Student ID: 23CS047',
-                    style: TextStyle(
-                      color: const Color(0xFF2BD4B4),
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      shadows: [
-                        Shadow(
-                          offset: const Offset(2, 2),
-                          blurRadius: 4,
-                          color: Colors.black.withOpacity(0.3),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Name: Kunj Mungalpara',
-                    style: TextStyle(
-                      color: const Color(0xFFb4befe),
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      shadows: [
-                        Shadow(
-                          offset: const Offset(2, 2),
-                          blurRadius: 4,
-                          color: Colors.black.withOpacity(0.3),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Input Fields
-            _buildInputField(
-              controller: _loanAmountController,
-              label: 'Loan Amount',
-              hint: 'Enter loan amount',
-              icon: Icons.currency_rupee,
-              suffix: '₹',
-            ),
-            _buildInputField(
-              controller: _interestRateController,
-              label: 'Annual Interest Rate',
-              hint: 'Enter interest rate',
-              icon: Icons.percent,
-              suffix: '%',
-            ),
-            _buildInputField(
-              controller: _tenureController,
-              label: 'Loan Tenure',
-              hint: 'Enter tenure in months',
-              icon: Icons.calendar_month,
-              suffix: 'months',
-            ),
-
-            const SizedBox(height: 20),
-
-            // Action Buttons
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: _calculateEMI,
-                    icon: const Icon(Icons.calculate),
-                    label: const Text(
-                      'Calculate EMI',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF2BD4B4),
-                      foregroundColor: const Color(0xFF1e1e2e),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 3,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _clearAll,
-                    icon: const Icon(Icons.clear_all),
-                    label: const Text(
-                      'Clear All',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFFf38ba8),
-                      side: const BorderSide(
-                        color: Color(0xFFf38ba8),
-                        width: 2,
-                      ),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 30),
-
-            // Results Section
-            if (_showResults) ...[
+  Widget build(BuildContext context) => Scaffold(
+        appBar: AppBar(
+            title: const Text('EMI Calculator',
+                style: TextStyle(fontWeight: FontWeight.bold))),
+        body: Padding(
+          padding: const EdgeInsets.all(20),
+          child: SingleChildScrollView(
+            child: Column(children: [
+              // Student Info
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF313244),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFF45475a), width: 1),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                    color: const Color(0xFF313244),
+                    borderRadius: BorderRadius.circular(12)),
+                child: const Column(
                   children: [
-                    const Text(
-                      'EMI Calculation Results',
-                      style: TextStyle(
-                        color: Color(0xFF89B4FA),
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    _buildResultCard(
-                      title: 'Monthly EMI',
-                      value: '₹${_emi.toStringAsFixed(2)}',
-                      icon: Icons.payment,
-                      color: const Color(0xFF89B4FA),
-                    ),
-                    _buildResultCard(
-                      title: 'Total Payment',
-                      value: '₹${_totalPayment.toStringAsFixed(2)}',
-                      icon: Icons.account_balance_wallet,
-                      color: const Color(0xFFa6e3a1),
-                    ),
-                    _buildResultCard(
-                      title: 'Total Interest',
-                      value: '₹${_totalInterest.toStringAsFixed(2)}',
-                      icon: Icons.trending_up,
-                      color: const Color(0xFFfab387),
-                    ),
+                    Text('Student ID: 23CS047',
+                        style: TextStyle(
+                            color: Color(0xFF2BD4B4),
+                            fontWeight: FontWeight.w600)),
+                    SizedBox(height: 4),
+                    Text('Name: Kunj Mungalpara',
+                        style: TextStyle(color: Color(0xFFb4befe))),
                   ],
                 ),
               ),
-            ],
-
-            const SizedBox(height: 20),
-          ],
+              const SizedBox(height: 20),
+              _input(_loanCtrl, 'Loan Amount', 'Enter amount', Icons.currency_rupee, '₹'),
+              _input(_rateCtrl, 'Interest Rate', 'Enter annual rate', Icons.percent, '%'),
+              _input(_tenureCtrl, 'Tenure (months)', 'Enter months', Icons.calendar_month, 'mo'),
+              const SizedBox(height: 20),
+              Row(children: [
+                Expanded(
+                    child: ElevatedButton.icon(
+                        onPressed: _calc,
+                        icon: const Icon(Icons.calculate),
+                        label: const Text('Calculate'))),
+                const SizedBox(width: 10),
+                Expanded(
+                    child: OutlinedButton.icon(
+                        onPressed: _clear,
+                        icon: const Icon(Icons.clear),
+                        label: const Text('Clear')))
+              ]),
+              const SizedBox(height: 20),
+              if (_show) ...[
+                const Text('Results',
+                    style: TextStyle(
+                        color: Color(0xFF89B4FA),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20)),
+                _result('Monthly EMI', '₹${_emi.toStringAsFixed(2)}',
+                    Icons.payment, const Color(0xFF89B4FA)),
+                _result('Total Payment', '₹${_total.toStringAsFixed(2)}',
+                    Icons.account_balance_wallet, const Color(0xFFa6e3a1)),
+                _result('Total Interest', '₹${_interest.toStringAsFixed(2)}',
+                    Icons.trending_up, const Color(0xFFfab387)),
+              ]
+            ]),
+          ),
         ),
-      ),
-    );
-  }
+      );
 
   @override
   void dispose() {
-    _loanAmountController.dispose();
-    _interestRateController.dispose();
-    _tenureController.dispose();
+    _loanCtrl.dispose();
+    _rateCtrl.dispose();
+    _tenureCtrl.dispose();
     super.dispose();
   }
 }
