@@ -1,373 +1,204 @@
 import 'package:flutter/material.dart';
 
-void main() {
-  runApp(const CalculatorApp());
-}
+void main() => runApp(const CalculatorApp());
 
 class CalculatorApp extends StatelessWidget {
   const CalculatorApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Kids Calculator',
-      theme: ThemeData(
-        primarySwatch: Colors.teal,
-        brightness: Brightness.light,
-      ),
-      home: const CalculatorPage(),
-    );
-  }
+  Widget build(BuildContext context) => MaterialApp(
+        title: 'Kids Calculator',
+        theme: ThemeData(primarySwatch: Colors.teal),
+        home: const CalculatorPage(),
+      );
 }
 
 class CalculatorPage extends StatefulWidget {
   const CalculatorPage({super.key});
-
   @override
   State<CalculatorPage> createState() => _CalculatorPageState();
 }
 
 class _CalculatorPageState extends State<CalculatorPage> {
-  String _display = '0';
-  String _operator = '';
-  double? _firstOperand;
-  bool _shouldResetDisplay = false;
+  String display = '0', operator = '';
+  double? firstOperand;
+  bool resetDisplay = false;
 
-  void _numPress(String num) {
+  void press(String value) {
     setState(() {
-      if (_shouldResetDisplay || _display == '0') {
-        _display = num;
-        _shouldResetDisplay = false;
+      if (resetDisplay || display == '0') {
+        display = value;
+        resetDisplay = false;
       } else {
-        _display = _display + num;
+        display += value;
       }
     });
   }
 
-  void _decimalPress() {
-    setState(() {
-      if (_shouldResetDisplay) {
-        _display = '0.';
-        _shouldResetDisplay = false;
-      } else if (!_display.contains('.')) {
-        _display = _display + '.';
+  void setOperator(String op) {
+    firstOperand = double.tryParse(display);
+    operator = op;
+    resetDisplay = true;
+  }
+
+  void evaluate() {
+    final second = double.tryParse(display) ?? 0;
+    double result = second;
+
+    if (firstOperand != null && operator.isNotEmpty) {
+      switch (operator) {
+        case '+':
+          result = firstOperand! + second;
+          break;
+        case '-':
+          result = firstOperand! - second;
+          break;
+        case '×':
+          result = firstOperand! * second;
+          break;
+        case '÷':
+          if (second == 0) {
+            display = 'Error';
+            firstOperand = null;
+            operator = '';
+            resetDisplay = true;
+            return;
+          }
+          result = firstOperand! / second;
+          break;
       }
-    });
+    }
+
+    display = result % 1 == 0 ? result.toInt().toString() : result.toString();
+    firstOperand = null;
+    operator = '';
+    resetDisplay = true;
+    setState(() {});
   }
 
-  void _clear() {
-    setState(() {
-      _display = '0';
-      _operator = '';
-      _firstOperand = null;
-      _shouldResetDisplay = false;
-    });
-  }
+  void clear() => setState(() {
+        display = '0';
+        operator = '';
+        firstOperand = null;
+        resetDisplay = false;
+      });
 
-  void _backspace() {
-    setState(() {
-      if (_shouldResetDisplay) {
-        _display = '0';
-        _shouldResetDisplay = false;
-        return;
-      }
-      if (_display.length <= 1) {
-        _display = '0';
-      } else {
-        _display = _display.substring(0, _display.length - 1);
-      }
-    });
-  }
-
-  void _setOperator(String op) {
-    setState(() {
-      _operator = op;
-      _firstOperand = double.tryParse(_display) ?? 0;
-      _shouldResetDisplay = true;
-    });
-  }
-
-  void _evaluate() {
-    setState(() {
-      final second = double.tryParse(_display) ?? 0;
-      double result = second;
-
-      if (_firstOperand != null && _operator.isNotEmpty) {
-        switch (_operator) {
-          case '+':
-            result = _firstOperand! + second;
-            break;
-          case '-':
-            result = _firstOperand! - second;
-            break;
-          case '×':
-            result = _firstOperand! * second;
-            break;
-          case '÷':
-            if (second == 0) {
-              _display = 'Error';
-              _firstOperand = null;
-              _operator = '';
-              _shouldResetDisplay = true;
-              return;
-            }
-            result = _firstOperand! / second;
-            break;
+  void backspace() => setState(() {
+        if (resetDisplay) {
+          display = '0';
+          resetDisplay = false;
+        } else {
+          display = display.length > 1
+              ? display.substring(0, display.length - 1)
+              : '0';
         }
-      }
+      });
 
-      // Trim trailing .0 for integers
-      final text = result.toString();
-      if (text.endsWith('.0')) {
-        _display = text.substring(0, text.length - 2);
-      } else {
-        _display = text;
-      }
-
-      _firstOperand = null;
-      _operator = '';
-      _shouldResetDisplay = true;
-    });
-  }
-
-  Widget _buildButton(
-    String label, {
-    Color? color,
-    Color? textColor,
-    double fontSize = 24,
-    VoidCallback? onTap,
-  }) {
-    return Material(
-      color: color ?? Colors.white,
-      child: InkWell(
-        onTap: onTap,
-        child: Container(
-          alignment: Alignment.center,
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: fontSize,
-              color: textColor ?? Colors.black,
+  Widget buildBtn(String text,
+          {Color color = Colors.white,
+          Color textColor = Colors.black,
+          double size = 24,
+          VoidCallback? onTap}) =>
+      Expanded(
+        child: Material(
+          color: color,
+          child: InkWell(
+            onTap: onTap,
+            child: Center(
+              child: Text(text,
+                  style: TextStyle(fontSize: size, color: textColor)),
             ),
           ),
         ),
-      ),
-    );
-  }
+      );
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFe8f5e9),
-      appBar: AppBar(title: const Text('Kids Calculator'), centerTitle: true),
-      body: SafeArea(
-        child: Column(
+  Widget build(BuildContext context) => Scaffold(
+        backgroundColor: const Color(0xFFe8f5e9),
+        appBar: AppBar(title: const Text('Kids Calculator'), centerTitle: true),
+        body: Column(
           children: [
+            // Display
             Expanded(
               flex: 2,
               child: Container(
-                padding: const EdgeInsets.all(24),
                 alignment: Alignment.bottomRight,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      _operator.isNotEmpty && _firstOperand != null
-                          ? '${_firstOperand!.toString().replaceAll(RegExp(r"\.0+"), "")} $_operator\''
-                          : '',
-                      style: const TextStyle(fontSize: 20, color: Colors.grey),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      _display,
-                      style: const TextStyle(
-                        fontSize: 56,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
+                padding: const EdgeInsets.all(24),
+                child: Text(
+                  display,
+                  style: const TextStyle(
+                      fontSize: 56, fontWeight: FontWeight.bold),
                 ),
               ),
             ),
+
+            // Buttons
             Expanded(
               flex: 5,
-              child: Container(
+              child: Padding(
                 padding: const EdgeInsets.all(8),
                 child: Column(
                   children: [
-                    Expanded(
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: _buildButton(
-                              'C',
-                              color: Colors.redAccent,
-                              textColor: Colors.white,
-                              fontSize: 22,
-                              onTap: _clear,
-                            ),
-                          ),
-                          Expanded(
-                            child: _buildButton(
-                              '⌫',
-                              color: Colors.orangeAccent,
-                              textColor: Colors.white,
-                              fontSize: 22,
-                              onTap: _backspace,
-                            ),
-                          ),
-                          Expanded(
-                            child: _buildButton(
-                              '÷',
-                              color: Colors.blueAccent,
-                              textColor: Colors.white,
-                              fontSize: 22,
-                              onTap: () => _setOperator('÷'),
-                            ),
-                          ),
-                          Expanded(
-                            child: _buildButton(
-                              '×',
-                              color: Colors.blueAccent,
-                              textColor: Colors.white,
-                              fontSize: 22,
-                              onTap: () => _setOperator('×'),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Expanded(
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: _buildButton(
-                              '7',
-                              onTap: () => _numPress('7'),
-                            ),
-                          ),
-                          Expanded(
-                            child: _buildButton(
-                              '8',
-                              onTap: () => _numPress('8'),
-                            ),
-                          ),
-                          Expanded(
-                            child: _buildButton(
-                              '9',
-                              onTap: () => _numPress('9'),
-                            ),
-                          ),
-                          Expanded(
-                            child: _buildButton(
-                              '-',
-                              color: Colors.blueAccent,
-                              textColor: Colors.white,
-                              onTap: () => _setOperator('-'),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Expanded(
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: _buildButton(
-                              '4',
-                              onTap: () => _numPress('4'),
-                            ),
-                          ),
-                          Expanded(
-                            child: _buildButton(
-                              '5',
-                              onTap: () => _numPress('5'),
-                            ),
-                          ),
-                          Expanded(
-                            child: _buildButton(
-                              '6',
-                              onTap: () => _numPress('6'),
-                            ),
-                          ),
-                          Expanded(
-                            child: _buildButton(
-                              '+',
-                              color: Colors.blueAccent,
-                              textColor: Colors.white,
-                              onTap: () => _setOperator('+'),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Expanded(
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: _buildButton(
-                              '1',
-                              onTap: () => _numPress('1'),
-                            ),
-                          ),
-                          Expanded(
-                            child: _buildButton(
-                              '2',
-                              onTap: () => _numPress('2'),
-                            ),
-                          ),
-                          Expanded(
-                            child: _buildButton(
-                              '3',
-                              onTap: () => _numPress('3'),
-                            ),
-                          ),
-                          Expanded(
-                            child: _buildButton(
-                              '=',
-                              color: Colors.green,
-                              textColor: Colors.white,
-                              fontSize: 22,
-                              onTap: _evaluate,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Expanded(
-                      child: Row(
-                        children: [
-                          Expanded(
-                            flex: 2,
-                            child: _buildButton(
-                              '0',
-                              onTap: () => _numPress('0'),
-                            ),
-                          ),
-                          Expanded(
-                            child: _buildButton('.', onTap: _decimalPress),
-                          ),
-                          Expanded(
-                            child: _buildButton(
-                              '00',
-                              onTap: () => _numPress('00'),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                    // Top row
+                    _row([
+                      buildBtn('C',
+                          color: Colors.redAccent,
+                          textColor: Colors.white,
+                          onTap: clear),
+                      buildBtn('⌫',
+                          color: Colors.orangeAccent,
+                          textColor: Colors.white,
+                          onTap: backspace),
+                      buildBtn('÷',
+                          color: Colors.blueAccent,
+                          textColor: Colors.white,
+                          onTap: () => setOperator('÷')),
+                      buildBtn('×',
+                          color: Colors.blueAccent,
+                          textColor: Colors.white,
+                          onTap: () => setOperator('×')),
+                    ]),
+                    _row([
+                      buildBtn('7', onTap: () => press('7')),
+                      buildBtn('8', onTap: () => press('8')),
+                      buildBtn('9', onTap: () => press('9')),
+                      buildBtn('-',
+                          color: Colors.blueAccent,
+                          textColor: Colors.white,
+                          onTap: () => setOperator('-')),
+                    ]),
+                    _row([
+                      buildBtn('4', onTap: () => press('4')),
+                      buildBtn('5', onTap: () => press('5')),
+                      buildBtn('6', onTap: () => press('6')),
+                      buildBtn('+',
+                          color: Colors.blueAccent,
+                          textColor: Colors.white,
+                          onTap: () => setOperator('+')),
+                    ]),
+                    _row([
+                      buildBtn('1', onTap: () => press('1')),
+                      buildBtn('2', onTap: () => press('2')),
+                      buildBtn('3', onTap: () => press('3')),
+                      buildBtn('=',
+                          color: Colors.green,
+                          textColor: Colors.white,
+                          onTap: evaluate),
+                    ]),
+                    _row([
+                      Expanded(
+                          flex: 2, child: buildBtn('0', onTap: () => press('0'))),
+                      buildBtn('.', onTap: () => press('.')),
+                      buildBtn('00', onTap: () => press('00')),
+                    ]),
                   ],
                 ),
               ),
             ),
           ],
         ),
-      ),
-    );
-  }
+      );
+
+  Widget _row(List<Widget> children) =>
+      Expanded(child: Row(children: children));
 }
